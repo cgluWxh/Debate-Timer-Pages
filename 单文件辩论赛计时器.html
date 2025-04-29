@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>辩论赛计时器</title>
+  <link rel="stylesheet" href="assets/style.css" />
+  <style>
+    #modal {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: black;
+      padding: 2em;
+      display: none;
+      width: 80%;
+      height: 80%;
+      overflow-y: scroll;
+      border-radius: 1em;
+
+    }
+    #modal input, #modal select, #modal button, #modal textarea { margin: 0.5em 0; padding: 0.5em; width: 90%; }
+    #modal .section { background: black; padding: 1em; margin-top: 1em; border-radius: 8px; box-shadow: 0 0 5px #ccc; }
+    #modal .section h3 { margin-top: 0; }
+    #modal textarea { height: 200px; font-family: monospace; }
+    body {
+  margin: 0;
+  padding: 0;
+  font-family: system-ui, 'PingFang SC', 'Arial', sans-serif;
+  background-image: radial-gradient(50% 100% at center bottom, rgb(57, 76, 86), rgb(14, 17, 17));
+  background-size: cover;
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  user-select: none;
+  font-size: 20px;
+}
+
+#modal {
+  z-index: 999999;
+}
+
+.main-container {
+  width: 95%;
+  max-width: 1200px;
+  text-align: center;
+}
+
+.title-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: fixed;
+  top: 7%;
+  left: 0;
+  right: 0;
+  height: 7%;
+}
+
+.team-label {
+  font-size: 20px;
+  padding: 10px 20px;
+  flex: 1;
+  color: white;
+  font-weight: bold;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.team-label.pro {
+  background-color: rgb(179, 37, 37);
+}
+
+.team-label.con {
+  background-color: rgb(3, 105, 161);
+}
+
+#proSide::before {
+    content: '正方';
+    position: absolute;
+    left: .5em;
+    font-size: 1.6em;
+    padding: .02em .08em;
+}
+
+#conSide::before {
+    content: '反方';
+    position: absolute;
+    right: .5em;
+    font-size: 1.6em;
+    padding: .02em .08em;
+}
+
+.debate-title {
+  color: rgb(3, 105, 161);
+  flex-grow: 1;
+  font-size: 3em;
+  font-weight: bold;
+  text-align: center;
+  margin: 0 10px;
+}
+
+.section-name {
+  font-size: 2em;
+  margin: 20px 0;
+}
+
+.timers {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10em;
+  margin: 20px 0;
+  flex-wrap: wrap;
+}
+
+.timer-box {
+  text-align: center;
+}
+
+.time-text {
+  font-size: 6em;
+  font-weight: bold;
+  color: white;
+  transition: color 0.3s ease;
+  font-family: 'Courier New', Courier, monospace, monaco, 'Source Code Pro', ‌'DejaVu Sans Mono';
+}
+
+.timer-box.double .label {
+  margin-top: .4em;
+  font-size: 1.6em;
+}
+
+div#proTimer * {
+  color: rgb(179, 37, 37)!important;
+}
+
+div#conTimer * {
+  color: rgb(3, 105, 161)!important;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 1em;
+}
+
+.controls button {
+  background-color: #222;
+  color: white;
+  border: 1px solid #666;
+  padding: 10px 20px;
+  font-size: 16px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.controls button:hover {
+  background-color: #333;
+}
+  </style>
+</head>
+
+<body>
+  <div id="modal"> 
+    <div class="section">
+      <h3>比赛基本信息</h3>
+      <label>比赛题目：<input type="text" id="settings-matchTitle" /></label><br />
+      <label>正方立场：<input type="text" id="settings-proSide" /></label><br />
+      <label>反方立场：<input type="text" id="settings-conSide" /></label>
+    </div>
+
+    <div class="section">
+      <h3 id="settings-addOrEditPage">添加比赛环节</h3>
+      <label id="settings-pageIndexLabel" style="display:none;">编辑环节序号：<input type="number" id="settings-pageIndex" style="display:none;" /></label>
+      <label>环节类型：
+        <select id="settings-pageType">
+          <option value="none">无计时</option>
+          <option value="single">单计时</option>
+          <option value="double">双计时</option>
+        </select>
+      </label><br />
+      <label>环节名称：<input type="text" id="settings-sectionName" /></label><br />
+      <div id="settings-singleSettings">
+        <label>时长（秒）：<input type="number" id="settings-singleDuration" /></label>
+      </div>
+      <div id="settings-doubleSettings" style="display:none;">
+        <label>正方时长（秒）：<input type="number" id="settings-proDuration" /></label><br />
+        <label>反方时长（秒）：<input type="number" id="settings-conDuration" /></label><br />
+      </div>
+      <button id="settings-addPage">暂存环节</button>
+    </div>
+
+    <div class="section">
+      <h3>环节列表 (左键编辑，右键删除)</h3>
+      <ul id="settings-pageList"></ul>
+    </div>
+
+    <div class="section">
+      <textarea id="settings-resultBox"></textarea>
+      <button id="settings-save">保存设置</button>
+    </div>
+    <div class="section">
+      <h3>杂项配置</h3>
+      <label>背景图片：<input type="file" id="image" onchange="toBase64()"
+            accept="image/jpeg,image/png,image/jpg"></label>
+      <button id="settings-clearBackground">清除背景图片</button>
+    </div>
+  </div>
+  <div class="main-container">
+    <div class="title-bar">
+      <div class="team-label pro" id="proSide">正方</div>
+      <div class="team-label con" id="conSide">反方</div>
+    </div>
+    <div class="debate-title" id="matchTitle">比赛题目</div>
+    <div class="section-name" id="sectionName">环节名称</div>
+    <div class="timers">
+      <div class="timer-box" id="singleTimer">
+        <div class="time-text" id="singleTime">00:00</div>
+      </div>
+      <div class="timer-box double" id="proTimer">
+        <div class="time-text pro" id="proTime">00:00</div>
+        <div class="label">正方</div>
+      </div>
+      <div class="timer-box double" id="conTimer">
+        <div class="time-text con" id="conTime">00:00</div>
+        <div class="label">反方</div>
+      </div>
+    </div>
+    <div class="controls">
+      <button id="prevBtn">上一页 (←)</button>
+      <button id="nextBtn">下一页 (→)</button>
+      <button id="startPauseBtn">启动/暂停 (Space)</button>
+      <button id="resetBtn">重置 (R)</button>
+      <button id="startProBtn">正方开始 (Q)</button>
+      <button id="startConBtn">反方开始 (E)</button>
+      <button id="test30sBtn">试音: 30秒 (I)</button>
+      <button id="testOverBtn">试音: 时间到 (P)</button>
+      <button id="switchBtn">切换方 (Tab)</button>
+      <button id="showGuideBtn">配置</button>
+    </div>
+  </div>
+  <div id="countingHint" style="display:none; position: fixed; right: 0; bottom: 0; z-index: -1;">计时中</div>
+  <script>// 内联配置
+    let config = null;
+    
+    // 主逻辑开始
+    let currentPageIndex = 0;
+    let timers = {
+      single: { duration: 0, remaining: 0, interval: null },
+      pro: { duration: 0, remaining: 0, interval: null },
+      con: { duration: 0, remaining: 0, interval: null }
+    };
+    let currentRunning = null;
+    let currentStart = "pro";
+    
+    const matchTitle = document.getElementById("matchTitle");
+    const proSide = document.getElementById("proSide");
+    const conSide = document.getElementById("conSide");
+    const sectionName = document.getElementById("sectionName");
+    
+    const test30sBtn = document.getElementById("test30sBtn");
+    const testOverBtn = document.getElementById("testOverBtn");
+    test30sBtn.addEventListener("click", () => {
+      playBeep(1);
+    });
+    testOverBtn.addEventListener("click", () => {
+      playBeep(2);
+    });
+    
+    const modal = document.getElementById("modal");
+    
+    const singleTimerBox = document.getElementById("singleTimer");
+    const singleTime = document.getElementById("singleTime");
+    const proTimerBox = document.getElementById("proTimer");
+    const conTimerBox = document.getElementById("conTimer");
+    const proTime = document.getElementById("proTime");
+    const conTime = document.getElementById("conTime");
+    const startPauseBtn = document.querySelector("#startPauseBtn")
+    const proBtn = document.querySelector("#startProBtn")
+    const conBtn = document.querySelector("#startConBtn")
+    const resetBtn = document.getElementById("resetBtn");
+    const showGuideBtn = document.getElementById("showGuideBtn");
+    const switchBtn = document.getElementById("switchBtn");
+    const prevBtn = document.getElementById("prevBtn");
+    const nextBtn = document.getElementById("nextBtn");
+    
+    const counting = document.querySelector("#countingHint");
+    counting.style.fontSize = "1.5em";
+    counting.style.color = "grey";
+    
+    const beep = new Audio("data:audio/mpeg;base64,SUQzBAAAAAABAFRFTkMAAAAiAAADQWRvYmUgUHJlbWllcmUgUHJvIDIwMjEuMCAoV2luZG8AVFhYWAAAABIAAAN0aW1lX3JlZmVyZW5jZQAwAFREUkMAAAAMAAADMjAyNS0wNC0zMABUU1NFAAAADgAAA0xhdmY2MS43LjEwMAAAAAAAAAAAAAAA//tUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAAUAAAewAASEhISHx8fHx8rKysrKzg4ODg4RERERERRUVFRUV1dXV1dampqamp2dnZ2doODg4ODj4+Pj4+cnJycnKioqKiotbW1tbXBwcHBwc7Ozs7O2tra2trn5+fn5/Pz8/Pz//////8AAAAATGF2YzYxLjE5AAAAAAAAAAAAAAAAJAVAAAAAAAAAHsBys5Rm//uUZAAAAwQczZUgwAI0gAovoAgADiHFXfjGgAEMka0/HnACABWERERERHeCA4BoCwGgeE7u7u7JhBDDwcBgML09Pe2f/tERGPZAhDp/Dw//////+OHrYAAAZ//0MAP/QeHh4eGAAAACPzDw/4AAAAAeHh4eGAH/4eHh4ekAAAwADw98AJlBEhUxSst0gic+ouD7xA58QHC4Pg/4gqORA7g+aOcP8o7g+/Kflz//KBhQIO///xOfLh+7t1VFKkYCICHOWbbYYAZhKXZIM0HscDkOzgSkElm6JJ4DeHYTTEnFyxixuXGTLp9Ulk0jN1GiZmXSVQSdBmUba0np3StpIpoM6tHdbVLZSdegpdmTV/6mdd1f////9nWrqo//qX/+t7/////vJ///lYh3ZWUVRTIwAJWxaAAKAQMtnXflTw4G8rqrRPh9uK6+QmGjCsHgkTERUu3/Nd3UoaeYVT1/+SQwPUv///mYaYA///YqC6NlABEAH/r+DGKgSacWYnJv//uUZAkAA4FkUnc9QAA66+qu5RwAjjmPU+wNWQDlr6q8BIgYF0DpYkUrXNWMBKSjo3C8UennCJFJMVQDBGComH555yylkYqNnMoxPOMPPZ1RHWx7OcizjVWiPQ1Vzd7tazq6M+6XuzdPONe83v9dqf9aMm//XfbozMEsic7xeAkFy4NCoYAZCBUY9AKILZUBoKUF1A+o2YacGxuIg4qWd////99at+/f///b///+y59KI2r0////////0Gwuy/dgAyAAAZdbfy3pHEFPli7k84lYbuy+AH8lF2X0lJOYSRTBzHLl9S1SfUrRvB61LJu1j3mvKggAKBv55fHAxZ/PKG6u9zacfJZ/knzSFopW0uUu1FQ39knTH+1k0elKaffVEaj7aJ9NlQjDMTb+omDAN61ICMAIaG1AugmOlwKUile7kjYQm+5LKpG/ahGP/e///5nktb7t1bp1rT/Ru/9P////////8O/LVQ2UMAEQMAGSJz/vRyXu1IJxr0BRMdSg//uUZAuAA9FkVHtLPpA0YxrvAQ0ODtmPV+w0/EDbD6w8J6iYZEHBozCaWa/Cb+eJVh0gAcJeKGi6Uc3qI38BlSaAi+dDV/ncL1TNJ4FKJNvPsx3dIgIGjnmKJ+9NEwAuTjT856xUEjPzPUcd389HlDf/V//Rv9c/T+nt//9fQ+oLA5F8oNSTB3QqAaqaOwgAGNOVTF5B8XKq9KkbUArATpogtJ9GsrRPfoUB3AsDZ1yZEN/+j////////rDtVwF0BgA5dY//VtnSxXty4+FUqbBzmvxJmcVlM7MxrCIlXReVBxmbK0Lk6s9Wa2QxED7X9jLt/rHtaqjsAR6sXPsd3zUdehgsbt+7OrOEqB8MEW2orSH8Ss31PQ7Ezu9e5VKt15n6t0/7Sjr/0/////hQ/+HlQ/bpmUgHiVgAPdYiI4sTpch/gGyLaHU5vIgpybbNPQ4CAQn984Cmed/UgFk8/5z/////////mA21cAQAMAJu+b/7SV2sNrKnbltYqOl8//uUZAuAA65j1fstPqA3RVuvAY0cjuGPUe1FWoDilbB8159GKGpB1uc7uiv2SEgneb6ihxzpm/hcrQ2jYB5oPsU+GsM72qRMsXqhdFf4/UXRhgA5lNqKbtdRfAyUF/qqCEf/yime9NvZ96EzPnMtDEnzPx6v//+d/2snsqgDAlf1HDACXYldgOgbYALOdYlXKGHhzlX1vUp1WbUyqi+e/+/pdll4JdN1rW96o43s1utQ8GM////////qm+UwASAQAAHJP33NylvtNgx186YRJRrZSXJDIsc/hzHBQMPRNbgSzbkur1qWdHGBrDzJYa5yzeyoZl9hgqb5QxGmx0p11nBTwA0ZnEXQvagHrdv4q//ldNPnJ+1JDOq7VXPqnaek9r/fVtv+i7/9WmgjG36BSjIL14ZXg2qPdsD6woh5tQOoCPLFbsi5Q5QKNzTaswCjIP/0Pt7+uDvECf2v/mf/Cf9yvb/9n////Ip3hDACIAAFfv1hE1twJLXEcamfcZBG//uUZAsAA4pj1nMzPqQ6pVrvAY0YDYl/cee1WFEQL6v0FkiapXbh9p9NDmcvhqpGEyRUJ3XbkEYvfhMMoWEFBDeNXXPYYf3eVe2ggO4m9lY+qtZ8gALgKmXEO6BQDmr/1piqf/0/+v7+POydOq95/WVM3svr62X///4ERZ+hM8A2IIDACYK0oA1iqxIu0a0Df1esfBRRN2ZTppnCYGyAW5u/+PgWn/2C+M9FqClYlfT/kp9P///////WExDGamBBFSXjf53BN8T8gpYi2nudLCSZaTyph/LLnaKb2JXYkn+Mawik6gnsPO/fSE0C5mzK/TGoD3N8qN3yFwbwPEBv6WA8SN/qRv/5I/zVdTSrnmGNNU1jCAdacv////mGImvf17qcIgQqD60JIBANFwHmbrXyTrIApha7utsXwssyU97JEY4IIDQjRv+Nt/1sXxfBfM42/1jgt/zf/5r///fdf66//////////OtVALiTJVFCSVZAy3oxyJ6JcDNtTEfG//uUZAqAAyle3XgPUOxFJWuPNY1KjQF9ace1WjkkmGs8djU4qsvoUJ/Fmw/C2MCgeDadKioDcIwnMcnnILQDR7fzRXABJqStso9E5fNOIkIjwpgpTGY9DVUoRDwud3W6KTtsbZjz7e+3PZD3////////0CoE3MELsSBuXQB9Ysw2BcCLlMEXE73yeC51Cql7i8DIp7VJvzISRBCl6o/l4xV+tieAWyDNbsnCr1/pvHw16bP//////+YCKdTBUE1V6v/5Q8NFGjLLGHG4khPK/Q5mu5yqnMBW3U/ZXkS9tq2CYaPQ2JGg//dpU4bTZ6/8YoGaNiVH0PUgBQh3VZrCSLA1XbR6D50b1exrU7J7/ZtUan+un+/T/Wm9a/NoQAvB2gL1mEoMDIDi4A6sIrINBDQgn19iNk3s9kJIBmZnETt+21zoPwAVtfr3TuwcKrV9FhdBlKOpmayyoWBv/1r/9RmpytKbv/////1KCqaDNmNIJI22/6ZPwwdLlfH7hrVW//uUZAqAAs1fXnnoLwxI49rvAY0cDdV9V+eMvMEMjKq4Bjx4Lsr9h9Wv4Yotd7m1lWtzgjButNP///XKkMd7EtqtMY1lEFnXHViEMRgnBWIvzX5f/l///679U/dzpO/v/9/////qLhMwB6ybGoGRGr90WCX0+1wahEYR1rt7rcpFMt7V0lhjAPzjfdcYQVzQ9a3TYkzniHXkKnNSjtFyTHxOXE8mkMJJ1Nt7Na4jf/8s8Mp0AEQACAjsb/k1ASbwtsY/F2b5IEY/bY6ku5s/Xy9vkIm27vusfB+CQALyt3j1xCrS9Bf319Y/+MNxvY1gQQFBAHhXGZUOdET+gdctziT7vM7/W+2SnIXSoM2OIjrOPdf//+//+nRGhYmo7iQMgFuwGpEcAtgmJa2E6PdKogOKGpXVf+NKD4uWPBd1x7yTjpCug///5xeMg6t7DinsS4N7KXu/6+0VJaFYjUW////m+moKt4RHc2r76v/CajKabltddBr7R0bAxYcGkYPF//uUZA4AA6tfXPMRLTw1w9teAS0djyGPV8y8ukDskqw8B6h4IEgSNurqIpKgu5bNAyIrSX+zuUS8K+BGtZqdaKBFQNQkSsgr1ppiPyz1lmVgjbkRXHCwI6HYxUTc5EdLSEcgqLHMRDpchHVNrlfVmNdCy/9vf0dk///8wkGAEsqGqmq8wBqrc4NvBASJzgoiFkWUQewXw5ZQKx4JfLwwBqr60DQXQVwsSV/Oku3x2saLA5UFy0ACsBge/v/9es8cibrFXZjJCAHdw5KX7kbnTTvS/OSDqoLGQPiFPNRXG1N4zKMobO31m//58+pbJQAjV7Lf7gY+JU4TNmUjyatLX38vzIfSzYyVELGgc9Gb8n/5ptNG0V6HaiqVilW83Gno3/k1k///TWFN+gOJgHSwE7mRCloAMRnxLubVjLed/H3NGz7GCHISI5jewMhq36JQRJn9UGYwZr9XePXCTGj7X6f///////oqDclTB1BQA0rbP/d+qsC8DIc26UDbEe6D//uUZAwAA/lj1vsPVoAupWsPASoeD72PUc1I+oCoj+y8BKhyrM2DSvsy6mNYqLFiKxssZY87ub+rSRtBAWelf5/r99uYsKAd5Fj395z6wk6AMOFehlLKaAm57KvWYBYxU5v5PMM/q7Ne1mW9jj6FrMr5zo7uQanuzTOszol71O+lLbTqGMJQ3r6kxoB9sQQgEAI7QAsMqCrFqofrsDxJOf9QCqGNO9AZEz/4n/+wcVn/3+mtR4w3T/WkMuHAEMCAUpP+7HnjR1UQkqcDjR4VHhn7OkjUQitWW0udoUDi5yAJc8kBOxUszFqIDpY9whWmmz5hhlRVYMFTpwUDlyztxN6amDyAYWeRWxve8oBgBdNSNV8Tm6K0f5jf3dSDux6+1V0Z3Q3We9b+n//Wu//12ovisl7TQQEwBDMAIgCAISAAUGZqFQt7P/los4tmUG5d/8Rxin/Kk3rc+eFQBVizev5eDclwBDAAAGbYP/tibUxXK05msM1iQFB5dEYeS3b1//uUZA8AA7Vj1nsyFqAzhVtdHaemjX19c+fAupEUFWy4FLS6ejcrdNl5iBuvK5XE4vnbmIYgQvuaR7J7WGG7ve3b6bofhGbX4NUhYY8K8V8zRWmpTE2HVdklP9YyCe/8Da/0eZGc1FoSEO9lvPdNGbmyOv//b///+Db9ArgfQBgNBOQAP0FLMz1L5z/qGw9jyp/QTJUW7/vqDI3/TD2m1V9TAiY6rfURJv////////eFVDESmBBJyza/20qwU4yRjOJ4tySMh10PQS3bD7GlK+esuI0/+LbkL6q3t/f33SOTwK1yz+gnUqLSAUFSo4aNdTEME7H19S1mEuCTk4yl/yf/X/ylUtTvnuZjkOp7q3X99Wto7f9Kf63DgYgAWGIlIDK/wfmBAAwMi1UARbINAnV1+DpEBJgUKb7iEBChOWoaboGIxAu5SXoaboD6CcGOpupZmOFSP18k/lv//////+sLyYNFUUCLu3F/tBFzGOLWYCBR1jYFpVL5VXtWtvaV//uURA+AAotfXnntPTRKxtsvMQ16iol9eee1VrEjmK58kZ3eoVFHrhP8yGwvM6v1FL/pDsBWVvi65ysYBJ386lAmIsv+n/qifrbzFRvv/////////FDBEqoAaAABKVAEzlUMD6MvKBwwrFDrFqOh5LbFBAOnjqGYcwnOq4/2UMAGkdP6jg7A2V8261KIz/+m3/UP11KtpJInFAmf//////UFZLmjKaoNuOCf5ueJVEUS10T+pVHHF0u3+qwJvtPpU6GHUk/pSuHIvrb9zEkgWw3ZT/SGMB5EfNbY7BBT/UhJWmf6//t/2dkr+nqv///////9BGLhMuxIqiZCTjYP9yUCxOOYK7A4FXYXTyI0rKMzoekVQY2X/HRGMPZP0EYAoX2NazIghCMhfU9qlRM3snYfZFOHmW1NXyn////m6grKhEZiSi2/cfW44gXybIlUFFk9jW9oXZa2Z82SshzHMSFBAjAm/zSMFgAqLJ5uhvH4Lj9urKLXz+xw1/+n//93//uURCCAAm5fX3oPUVRL5hsPLaXQiaF7X+e08oEmkqz8pii6p//0////////6CuOrB4VQEzEiG0rAP3g0CcbKDAMsghBblzh3hO5THJPIRl1DEHGryYte79yKbAcjpa2arJJDWFYTl7fUDf+q//ASsXxV79H6zt////6/HhXywCqAARU+wX/0pQ4lexOCdsuDzY/NeNu9LSOoZuzWrWo4HwFcKBu7t6ioA//WOiHV0u9FlvXuxM1dp66rt/p//b//////////5XwqDw6EaIRAtO2g9hwCYD5WUFPy4I4N3D3rv8s9IajNX1Ia+gwEIi/Y0qJQF6f1kIgV++zDwtnWioRPy6x59jm5Ad3kfUSS////+SqCohkRlNkW5G2/+pWp3tYG0qMtZiBDAPivJv2ovbB+sIe5HpEbADIH/VnTwZRju7bjzPgtHZm15gRQNRBVFem1rIIICABk1yBDyzII4Sx6Su9mZTCIQiNfRNDHRl60k5mmZ0P7b91ez/uZX/+//uUZDYAA5JfXPsRVawzI9r/BedKDjmPV+y9WgDOEmt0BbRo3///+hINQDIQlRScBN0AD2MY18jxQWvr31PSQ9BSDsq/cWT0HgQb+hg+Bb/sOCQ70fKf///////9YbjMAIgEAJFsV/1InDqhz5t0rwbHiqcNY2qkdv2ZqUSHCbS0D/UgLUdmoazw5Kn1VQJzpfhfw5zXNSrgLIhF/H6zbkXCjF0lP9j2aXbKHkAG0Jv8qIt/+o/MMpt5v0fVyRtbexqXP/p//////+gVv6ELgbVjAMAOIADl7JeYAUEp7Y2vjUNJ1Bkz/qDuOFlf6yAzfqc4PdN9+pNMvs9f////////XQ3DMAQgIAGLaL/qTLSGXyOgl8FTJBAHI24zLI9qnmo3WpRxwwAVuUMldiRZUm/rjhBwERW1u1vL96oSA4yEZRb16tpZLwDGV0pdNmQamQQLfkTJkv0BBBD/xa/2ZHVERXc1OhJvdKtH61T8eM///////EYZ/hoqBrEZQAi5//uUZD6AA7dj1XswPqAxS+ttAQccjmWRTc3I+oC2lW10AyiqABO2arwKq81IE7LyX/icbJ/0P/88NO9v40M/8af////////////////zCIZBkAAICABYf+cPt1oGzxB5rcTHUwII4XZkFFjUpqCkmxk0NDB34lunkd+xbjD3soLZhJ6q2X296rWZVlFVRnTgaJUmv8Sdc6oOqBXjFJ2PN6wvahb/DVf/y92W/1v09R3p/NubX9f/p/////CMl+VB4NHAF4FpQAqYgVsWEcr/oi00HKxHYt/xeLf/xv6LOVgmgYMd/8//5H///9f////U7sqQBDAAAErscfuyx9mGLiWkxJOaIEBh5cXp6R+IxXmJZSOwXkCJOw1yLxv8Kk25btg2YaOPdBCs3rSBOQaYXaf0IxgKiVL39MpiB3Zv6YuT/2Fdv8n7rRCbPe/GMv+41/9f7f///wtv4qYA2rFWUAobkoDKhORyUXCHZ3NsY2aChvMMNMEGBIBF/3EsBRv+//uUZEgAA1hj1vsSLcAzpWsvAMoUDOV9b+eovhDyFa+8NbVmgfN/48/+U/Z///////yITDqRGQESFJOJ/h+ryYFkq0uh64aTjVrihEWucva2P5Kz3gsM1bwVdHTp+yvb/PvvF4JW13///miKAY4/y1s996kyhhiP7+2tzJACGSJ/3/+b8l0HiLqQvUahg+CGNb///////+o4MCqhzVWN23HGA/6wAxCV2Exj126J7IglB2BONA+oemEACoHjod2WYCUt+rMg56un9RL/+5X+3///////h+oKqHQkQjJaTcF/3VQNCwjmlhyTFNfuNt5tX1XmeNm0HXrjEFJHDJq1v/4z1YNNqnphH1j+EWU22a6DwYT+k4XG/9Sv/zd/ZjLduyZq/////9+66//UFhEHhlEiMAAAKcA/+lAdBiF6S9cEBFAysqptOSUbqKi4nnWpXKFRQF7K0f9yKh6lxr6isDk7fOGqf0nHm/9Sp3yvoX1pQ9v///9QPLIQEQAAVBf5//uURFSAArhfXnntPoxIphsfPQd6ilV7X8e0+FEim6z88ymasfwGY/T9OMgkYzxK02rLS7b750YCFOVs3rauoVD4EDb4s8XWL1olo4jt7+sdobpZo9rIKwA2Nf+prf+n//////////////8p4wHl1EEQCABdoB/+2M8kJKMm6GWX0rrgBI22BXbAodjmzzkQZK39nZf9R6F6SaPW08FS39mUhGTNd6bnGHvze6lDop//////I9EKp2YUU0W+8/YPZHFTgxBoeg2JTP45eqKQyBEgDSNC0ZqU9TLAvEj09jzAITHa67qQAUze/OPFQKj1/zf/k/9dk/v/b+ur////////8ZjoRSKaKhErFQ/+5vEg+rwubAoL7VKzAiYcdUUSuKS3fOJmpmBoABsXL7dNAL7fVUu7AdP+pv/MT/1K37UY25v5eyf+v////////CDBNNCGikS9fj/I2rKHwiBj+IG/MBCXJ80OcTTLnVY8XG5N/GK60eg1JN//+kBvHcZL//uUZGUAAnVfXXFpUmxKy+s+PaWXiz19b8ecujDbFaw8Bih4FGgbRfGwEtF9phRva9FPtt6ClVqSjLEbvWRqs3fZfd7////////8LbpANiUZ0QiI5wAtTWhOntHoRVXqfWbP3dXC46lPhKDVX/ONGAhSI6v0OLf+hzf7yNv///////+RHzsKYKBKcYX9lwSFAZN8pCVN6EIKRpaFFDeQ0T5T3R8d6/jXcEa4HaUAuggLjTWvvNLuCeC7W9ey73gfJXYxDUeccG6fzTHFm9H3Vy7HmIY5yI7lESaq1XS3T9dF/////f//9BFDusEACXIgEwIGMC85IuegborbO7CsN6eqlPLHoFAWKTd6CkDIRZ/69zo53/9f/0P////////////////1JnwqUIlMxAAEygCZmi8NFpBiE9aYMUL0fJ5YXuNDSfe8otN6xNtB0FyWsjXqwxCU6TLUsQg0mf9BCN+bKf1ro6qv73evf///////////+FF/QCiQBUHCoiJR//uUZH4AA0Rf1mnqPpQ7S+quCW12Cj2PU+YotsExr2s8FjUw6fwB5EHM8I4tajgcb9yrK4HwbdY8p8VtSNA3C//5iPUkwixikkz2UtEeocCH/q+tJNlzq3uvXqX++y/t////////////nQnFQVEgAF/Amc4YiGvILqTBwBdwRCktcQRNTFyIWm6jY3RSQHsSxHMxMy46DWomDpgsUWZH1yaTTNqd7quJmi6S7dW1/9Wr+y6v////////////j8f/UWnWAN2yhFJGH7gAv/6sTGK8iHPeHNgUEJxoRFjXUlLPJi95M5MLAik/7Fz+ceiMxQBU9O/ZCNv/Tt////////////////yFul5d1U0NlAAABCRKC9yRxoi49YFCbbw1JRUogiosh0pZp9RkoBIsPKo0G9hYeDmgEzMkw+wzZQHOI0WkiqTiCouc1D2RORSJkxRFyg1MFzaRFUQaAB6xWwyiJNG5dMiHhcYtplwVMLaiAREy+KEGcSMdKmowJpAj//uUZIsAAshkVHUxoABGS+rPp6gAGhYFR/mJgAJ3L+o3MQACkhCg4BHZTHLGRIopJaKKklnkycM1qRJ4rucLSkFOiiikXi8jTsmYXTcql5BRSQP0zTUklRRpUUWUtFa7HCnsgrUhWZivq+r5Mjfiuf////kKmJ6/////WXS7dm5G5GCU045JJG42wR+EseCIv7t95t4pTHlYDEdohEt2p4vBawJ9DikUUlpnC6dqcV4PdLQ/B4R+MjIvHkxtIJjgF4QUixDBlkUTEyESBfSWXxhnwwsQ4qkMHOHOPozIxImmiovk4TREC6YmqZcMkEtSkkrqO1LQdlIUKSKLKSSWgcQbTSRTpOgkizoorR3//+c3q32QIz/9I9//6FImIyAAAkmVxLcWW14liJQNHhKGxK7s/Ev+IviV31HuJdwiPf/+o9/+JfZxLQoCpbM3GZuqspWQ0pXKWYzlAXCiWMZwoCYoktDPzGM8pXUpWoY1DG////////////6G/q3bobQ3//uURDIP8V0AQu8EYABEjBfw4YgAQAABpAAAACAAADSAAAAEUspUMZQoC4UBLCOF1UxBTUUzLjEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV");
+    
+    function formatTime(sec) {
+      const m = Math.floor(sec / 60);
+      const s = sec % 60;
+      return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    }
+    
+    async function playBeep(count) {
+      for (let i = 0; i < count; i++) {
+        await beep.play();
+        await new Promise(resolve => {
+          beep.onended = resolve;
+        });
+      }
+    }
+    
+    function disableBtns(btns) {
+      btns.forEach(btn => {
+        btn.setAttribute("disabled", true);
+        btn.style.display = "none";
+      });
+    }
+    
+    function enableBtns(btns) {
+      btns.forEach(btn => {
+        btn.removeAttribute("disabled");
+        btn.style.display = "block";
+      });
+    }
+    
+    function renderPage() {
+      const page = config.pages[currentPageIndex];
+      matchTitle.textContent = config.title;
+      proSide.textContent = config.pro;
+      conSide.textContent = config.con;
+      sectionName.textContent = page.section;
+    
+      singleTimerBox.style.display = "none";
+      proTimerBox.style.display = "none";
+      conTimerBox.style.display = "none";
+    
+      disableBtns([test30sBtn, testOverBtn, startPauseBtn, proBtn, conBtn, resetBtn, switchBtn, showGuideBtn])
+    
+      if (currentPageIndex === 0) {
+        enableBtns([showGuideBtn, test30sBtn, testOverBtn])
+        disableBtns([prevBtn])
+      } else enableBtns([prevBtn])
+      if (currentPageIndex === config.pages.length - 1) {
+        disableBtns([nextBtn])
+      } else enableBtns([nextBtn])
+    
+      if (page.type === "single") {
+        enableBtns([startPauseBtn, resetBtn])
+        startPauseBtn.textContent = "启动/暂停 (Space)"
+        singleTimerBox.style.display = "block";
+        timers.single.duration = page.duration;
+        timers.single.remaining = page.duration;
+        updateTimerDisplay("single");
+      } else if (page.type === "double") {
+        startPauseBtn.textContent = "暂停 (Space)"
+        enableBtns([startPauseBtn, resetBtn, proBtn, conBtn, switchBtn])
+        proTimerBox.style.display = "block";
+        conTimerBox.style.display = "block";
+        if (typeof page.duration === "number") {
+          page.duration = { pro: page.duration, con: page.duration };
+        }
+        timers.pro.duration = page.duration.pro;
+        timers.pro.remaining = page.duration.pro;
+        timers.con.duration = page.duration.con;
+        timers.con.remaining = page.duration.con;
+        currentStart = page.start || "pro";
+        updateTimerDisplay("pro");
+        updateTimerDisplay("con");
+      } else {
+        startPauseBtn.style.display = "none"
+        proBtn.style.display = conBtn.style.display = "none"
+        
+      }
+    }
+    
+    function updateTimerDisplay(type) {
+      let timeText = formatTime(timers[type].remaining);
+      const el = (type === "single") ? singleTime : (type === "pro" ? proTime : conTime);
+      el.textContent = timeText;
+      el.style.color = timers[type].remaining <= 30 ? "red" : "white";
+    }
+    
+    function clearAllIntervals() {
+      Object.keys(timers).forEach(k => {
+        if (timers[k].interval) clearInterval(timers[k].interval);
+        timers[k].interval = null;
+      });
+      counting.style.display = "none";
+      currentRunning = null;
+    }
+    
+    function startCountdown(type) {
+      if (currentRunning && currentRunning !== type) stopCountdown();
+      if (timers[type].remaining <= 0) return;
+      currentRunning = type;
+      counting.style.display = "block";
+      timers[type].interval = setInterval(() => {
+        timers[type].remaining--;
+        updateTimerDisplay(type);
+        if (timers[type].remaining === 30) playBeep(1);
+        if (timers[type].remaining <= 0) {
+          stopCountdown();
+          playBeep(2);
+        }
+      }, 1000);
+    }
+    
+    function stopCountdown() {
+      if (currentRunning && timers[currentRunning].interval) {
+        clearInterval(timers[currentRunning].interval);
+        timers[currentRunning].interval = null;
+      }
+      currentRunning = null;
+      counting.style.display = "none";
+    }
+    
+    function toggleStartPause() {
+      const page = config.pages[currentPageIndex];
+      if (currentRunning) stopCountdown();
+      else if (page.type === "single") startCountdown("single");
+    }
+    
+    function resetTimers() {
+      const page = config.pages[currentPageIndex];
+      clearAllIntervals();
+      if (page.type === "single") {
+        timers.single.remaining = timers.single.duration;
+        updateTimerDisplay("single");
+      } else if (page.type === "double") {
+        timers.pro.remaining = timers.pro.duration;
+        timers.con.remaining = timers.con.duration;
+        updateTimerDisplay("pro");
+        updateTimerDisplay("con");
+      }
+    }
+    
+    document.getElementById("prevBtn").onclick = () => {
+      clearAllIntervals();
+      currentPageIndex = Math.max(0, currentPageIndex - 1);
+      renderPage();
+      resetTimers();
+    };
+    document.getElementById("nextBtn").onclick = () => {
+      clearAllIntervals();
+      currentPageIndex = Math.min(config.pages.length - 1, currentPageIndex + 1);
+      renderPage();
+      resetTimers();
+    };
+    document.getElementById("startPauseBtn").onclick = toggleStartPause;
+    document.getElementById("resetBtn").onclick = resetTimers;
+    document.getElementById("startProBtn").onclick = () => {
+      clearAllIntervals();
+      startCountdown("pro");
+    };
+    document.getElementById("startConBtn").onclick = () => {
+      clearAllIntervals();
+      startCountdown("con");
+    };
+    document.getElementById("switchBtn").onclick = () => {
+      if (currentRunning === "pro") {
+        stopCountdown();
+        startCountdown("con");
+      } else if (currentRunning === "con") {
+        stopCountdown();
+        startCountdown("pro");
+      }
+    };
+    
+    document.addEventListener("keydown", (e) => {
+      if (modal.style.display === "block") return;
+      if (e.key === "ArrowLeft") document.getElementById("prevBtn").click();
+      else if (e.key === "ArrowRight") document.getElementById("nextBtn").click();
+      else if (e.key === " ") toggleStartPause();
+      else if (e.key.toLowerCase() === "r") resetTimers();
+      else if (e.key.toLowerCase() === "q") document.getElementById("startProBtn").click();
+      else if (e.key.toLowerCase() === "e") document.getElementById("startConBtn").click();
+      else if (e.key.toLowerCase() === 'i') test30sBtn.click();
+      else if (e.key.toLowerCase() === 'p') testOverBtn.click();
+      else if (e.key === "Tab") {
+        e.preventDefault();
+        document.getElementById("switchBtn").click();
+      }
+      else if (e.key === "?") document.getElementById("showGuideBtn").click();
+    });
+    
+    window.onload = () => {
+      const str = localStorage.getItem("config");
+      if (str) {
+        try {
+          config = JSON.parse(str);
+        } catch (e) {}
+      }
+      if (!config) {
+        config = {
+          title: "测试辩论赛标题",
+          pro: "人工智能的发展利大于弊",
+          con: "人工智能的发展弊大于利",
+          pages: [
+            { type: "none", section: "主持人开场" },
+            { type: "single", section: "正方立论", duration: 40 },
+            { type: "single", section: "反方立论", duration: 35 },
+            { type: "double", section: "自由辩论", duration: { pro: 40, con: 35 }, start: "pro" },
+            { type: "single", section: "总结陈词", duration: 35 }
+          ]
+        }
+        alert("未找到保存的配置文件，使用默认配置！")
+      }
+      showGuideBtn.onclick = function settingsPage() {
+        modal.style.display = "block";
+        let pageList = [];
+        const pageListEl = document.getElementById("settings-pageList");
+        const resultBox = document.getElementById("settings-resultBox");
+        document.getElementById("settings-clearBackground").onclick = function() {
+          document.querySelector("body").style.backgroundImage = "";
+          localStorage.removeItem("bg");
+        }
+    
+        document.getElementById("settings-pageType").addEventListener("change", function() {
+          const val = this.value;
+          document.getElementById("settings-singleSettings").style.display = val === "single" ? "block" : "none";
+          document.getElementById("settings-doubleSettings").style.display = val === "double" ? "block" : "none";
+        });
+        document.getElementById("settings-pageType").dispatchEvent(new Event("change"));
+    
+        
+        document.getElementById("settings-addPage").onclick = function() {
+          if (editPageIndexInput.value === "") {
+            addOrEditPage(null);
+          } else {
+            const i = parseInt(editPageIndexInput.value);
+            if (i < 1 || i > pageList.length) return alert("无法保存该页");
+            addOrEditPage(i);
+          }
+        };
+        document.querySelector("#settings-save").onclick = saveResult;
+        resultBox.value = JSON.stringify(config, null, 2);
+    
+        const addOrEditPageTitle = document.getElementById("settings-addOrEditPage");
+        const editPageIndexInput = document.getElementById("settings-pageIndex");
+        const labelPageIndex = document.getElementById("settings-pageIndexLabel");
+        editPageIndexInput.oninput = function() {
+          if (editPageIndexInput.value === "") {
+            addOrEditPageTitle.textContent = "添加环节";
+    
+            editPageIndexInput.style.display = labelPageIndex.style.display = "none";
+            return;
+          } else {
+            addOrEditPageTitle.textContent = "编辑环节";
+            editPageIndexInput.style.display = labelPageIndex.style.display = "block";
+          }
+        }
+    
+        function addOrEditPage(i=null) {
+          const type = document.getElementById("settings-pageType").value;
+          const section = document.getElementById("settings-sectionName").value;
+          if (!section) return alert("请输入环节名称");
+          let page = { type, section };
+    
+          if (type === "single") {
+            const duration = parseInt(document.getElementById("settings-singleDuration").value);
+            if (!duration) return alert("请输入单计时时长");
+            page.duration = duration;
+          } else if (type === "double") {
+            const pro = parseInt(document.getElementById("settings-proDuration").value);
+            const con = parseInt(document.getElementById("settings-conDuration").value);
+            if (!pro || !con) return alert("请输入双计时双方时长");
+            page.duration = { pro, con };
+          }
+    
+          if (i === null) {
+            pageList.push(page);
+          } else {
+            pageList[i-1] = page;
+          }
+          updateDisplay();
+          alert("暂存成功")
+        }
+    
+        function deleteOnePage(i) {
+          if(!confirm(`确定要删除第 ${i+1} 页 (${pageList[i].section}) 吗？`)) return;
+          pageList = pageList.filter((_, j) => j !== i);
+          console.log(pageList)
+          updateDisplay();
+        }
+    
+        function updateDisplay() {
+          pageListEl.innerHTML = "";
+          pageList.forEach((p, i) => {
+            const li = document.createElement("li");
+            li.textContent = `[${i+1}] ${p.section} - ${{none: "无", single: "单", double: "双"}[p.type]}计时` + (p.type!=='none'?`(${(typeof p.duration !== 'object') ? formatTime(p.duration) : formatTime(p.duration.pro) + '/' + formatTime(p.duration.con)})`:"");
+            li.oncontextmenu = function(e) {
+              e.preventDefault();
+              deleteOnePage(i);
+            }
+            li.onclick = function() {
+              editPageIndexInput.value = i+1;
+              editPageIndexInput.dispatchEvent(new Event("input"));
+              const typeSelect = document.getElementById("settings-pageType");
+              const sectionInput = document.getElementById("settings-sectionName");
+              const singleDurationInput = document.getElementById("settings-singleDuration");
+              const proDurationInput = document.getElementById("settings-proDuration");
+              const conDurationInput = document.getElementById("settings-conDuration");
+              sectionInput.value = p.section;
+              typeSelect.value = p.type;
+              typeSelect.dispatchEvent(new Event("change"));
+              if (p.type === "single") {
+                singleDurationInput.value = p.duration;
+              } else if (p.type === "double") {
+                proDurationInput.value = p.duration.pro;
+                conDurationInput.value = p.duration.con;
+              }
+            }
+            pageListEl.appendChild(li);
+          });
+    
+          const config = {
+            title: document.getElementById("settings-matchTitle").value,
+            pro: document.getElementById("settings-proSide").value,
+            con: document.getElementById("settings-conSide").value,
+            pages: pageList
+          };
+    
+          resultBox.value = JSON.stringify(config, null, 2);
+        }
+    
+        document.getElementById("settings-matchTitle").oninput =  
+        document.getElementById("settings-proSide").oninput =
+        document.getElementById("settings-conSide").oninput = updateDisplay;
+        function saveResult() {
+          currentPageIndex = 0;
+          config = JSON.parse(resultBox.value);
+          localStorage.setItem("config", JSON.stringify(config));
+          modal.style.display = "none";
+          renderPage();
+        }
+    
+        resultBox.oninput = function() {
+          try {
+            let tmpConfig = null;
+            if (!resultBox.value) {
+              tmpConfig = JSON.stringify(
+                {
+                  title: "",
+                  pro: "",
+                  con: "",
+                  pages: []
+                }, null, 2
+              )
+              resultBox.value = tmpConfig;
+            }
+            tmpConfig = JSON.parse(resultBox.value);
+            pageList.length = 0;
+            tmpConfig.pages.forEach(p => pageList.push(p));
+            document.getElementById("settings-matchTitle").value = tmpConfig.title;
+            document.getElementById("settings-proSide").value = tmpConfig.pro;
+            document.getElementById("settings-conSide").value = tmpConfig.con;
+            updateDisplay();
+          } catch (e) {
+            console.error(e);
+          }
+        }
+        resultBox.dispatchEvent(new Event("input"));
+      }
+      const x = localStorage.getItem("bg");
+      if (x) document.querySelector("body").style.backgroundImage = `url(${x})`;
+      renderPage();
+    }
+    function toBase64() {
+      var file = document.querySelector('input[type=file]').files[0];
+      var reader = new FileReader();
+      reader.onloadend = function () {
+        document.querySelector('body').style.backgroundImage = `url(${reader.result})`;
+        localStorage.setItem("bg", reader.result);
+      }
+      if (file) {
+        reader.readAsDataURL(file);
+      }
+    }</script>
+</body>
+
+</html>

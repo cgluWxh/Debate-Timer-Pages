@@ -39,6 +39,8 @@ const conBtn = document.querySelector("#startConBtn")
 const resetBtn = document.getElementById("resetBtn");
 const showGuideBtn = document.getElementById("showGuideBtn");
 const switchBtn = document.getElementById("switchBtn");
+const prevBtn = document.getElementById("prevBtn");
+const nextBtn = document.getElementById("nextBtn");
 
 const counting = document.querySelector("#countingHint");
 counting.style.fontSize = "1.5em";
@@ -90,16 +92,18 @@ function renderPage() {
 
   if (currentPageIndex === 0) {
     enableBtns([showGuideBtn, test30sBtn, testOverBtn])
-  }
+    disableBtns([prevBtn])
+  } else enableBtns([prevBtn])
+  if (currentPageIndex === config.pages.length - 1) {
+    disableBtns([nextBtn])
+  } else enableBtns([nextBtn])
 
   if (page.type === "single") {
     enableBtns([startPauseBtn, resetBtn])
     startPauseBtn.textContent = "启动/暂停 (Space)"
     singleTimerBox.style.display = "block";
-    if (timers.single.duration === 0) {
-      timers.single.duration = page.duration;
-      timers.single.remaining = page.duration;
-    }
+    timers.single.duration = page.duration;
+    timers.single.remaining = page.duration;
     updateTimerDisplay("single");
   } else if (page.type === "double") {
     startPauseBtn.textContent = "暂停 (Space)"
@@ -109,14 +113,10 @@ function renderPage() {
     if (typeof page.duration === "number") {
       page.duration = { pro: page.duration, con: page.duration };
     }
-    if (timers.pro.duration === 0) {
-      timers.pro.duration = page.duration.pro;
-      timers.pro.remaining = page.duration.pro;
-    }
-    if (timers.con.duration === 0) {
-      timers.con.duration = page.duration.con;
-      timers.con.remaining = page.duration.con;
-    }
+    timers.pro.duration = page.duration.pro;
+    timers.pro.remaining = page.duration.pro;
+    timers.con.duration = page.duration.con;
+    timers.con.remaining = page.duration.con;
     currentStart = page.start || "pro";
     updateTimerDisplay("pro");
     updateTimerDisplay("con");
@@ -172,7 +172,6 @@ function toggleStartPause() {
   const page = config.pages[currentPageIndex];
   if (currentRunning) stopCountdown();
   else if (page.type === "single") startCountdown("single");
-  else startCountdown(currentRunning || currentStart);
 }
 
 function resetTimers() {
@@ -222,14 +221,16 @@ document.getElementById("switchBtn").onclick = () => {
 };
 
 document.addEventListener("keydown", (e) => {
+  if (modal.style.display === "block") return;
   if (e.key === "ArrowLeft") document.getElementById("prevBtn").click();
   else if (e.key === "ArrowRight") document.getElementById("nextBtn").click();
   else if (e.key === " ") toggleStartPause();
   else if (e.key.toLowerCase() === "r") resetTimers();
   else if (e.key.toLowerCase() === "q") document.getElementById("startProBtn").click();
   else if (e.key.toLowerCase() === "e") document.getElementById("startConBtn").click();
+  else if (e.key.toLowerCase() === 'i') test30sBtn.click();
+  else if (e.key.toLowerCase() === 'p') testOverBtn.click();
   else if (e.key === "Tab") {
-    if (modal.style.display === "block") return;
     e.preventDefault();
     document.getElementById("switchBtn").click();
   }
@@ -245,14 +246,14 @@ window.onload = () => {
   }
   if (!config) {
     config = {
-      title: "人工智能的发展利大于弊",
+      title: "测试辩论赛标题",
       pro: "人工智能的发展利大于弊",
       con: "人工智能的发展弊大于利",
       pages: [
         { type: "none", section: "主持人开场" },
-        { type: "single", section: "正方立论", duration: 35 },
+        { type: "single", section: "正方立论", duration: 40 },
         { type: "single", section: "反方立论", duration: 35 },
-        { type: "double", section: "自由辩论", duration: { pro: 35, con: 35 }, start: "pro" },
+        { type: "double", section: "自由辩论", duration: { pro: 40, con: 35 }, start: "pro" },
         { type: "single", section: "总结陈词", duration: 35 }
       ]
     }
@@ -260,19 +261,53 @@ window.onload = () => {
   }
   showGuideBtn.onclick = function settingsPage() {
     modal.style.display = "block";
-    const pageList = [];
+    let pageList = [];
     const pageListEl = document.getElementById("settings-pageList");
     const resultBox = document.getElementById("settings-resultBox");
+    document.getElementById("settings-clearBackground").onclick = function() {
+      document.querySelector("body").style.backgroundImage = "";
+      localStorage.removeItem("bg");
+    }
 
     document.getElementById("settings-pageType").addEventListener("change", function() {
       const val = this.value;
       document.getElementById("settings-singleSettings").style.display = val === "single" ? "block" : "none";
       document.getElementById("settings-doubleSettings").style.display = val === "double" ? "block" : "none";
     });
+    document.getElementById("settings-pageType").dispatchEvent(new Event("change"));
 
-    function addPage() {
+    
+    document.getElementById("settings-addPage").onclick = function() {
+      if (editPageIndexInput.value === "") {
+        addOrEditPage(null);
+      } else {
+        const i = parseInt(editPageIndexInput.value);
+        if (i < 1 || i > pageList.length) return alert("无法保存该页");
+        addOrEditPage(i);
+      }
+    };
+    document.querySelector("#settings-save").onclick = saveResult;
+    resultBox.value = JSON.stringify(config, null, 2);
+
+    const addOrEditPageTitle = document.getElementById("settings-addOrEditPage");
+    const editPageIndexInput = document.getElementById("settings-pageIndex");
+    const labelPageIndex = document.getElementById("settings-pageIndexLabel");
+    editPageIndexInput.oninput = function() {
+      if (editPageIndexInput.value === "") {
+        addOrEditPageTitle.textContent = "添加环节";
+
+        editPageIndexInput.style.display = labelPageIndex.style.display = "none";
+        return;
+      } else {
+        addOrEditPageTitle.textContent = "编辑环节";
+        editPageIndexInput.style.display = labelPageIndex.style.display = "block";
+      }
+    }
+
+    function addOrEditPage(i=null) {
       const type = document.getElementById("settings-pageType").value;
       const section = document.getElementById("settings-sectionName").value;
+      if (!section) return alert("请输入环节名称");
       let page = { type, section };
 
       if (type === "single") {
@@ -282,24 +317,53 @@ window.onload = () => {
       } else if (type === "double") {
         const pro = parseInt(document.getElementById("settings-proDuration").value);
         const con = parseInt(document.getElementById("settings-conDuration").value);
-        const start = document.getElementById("settings-startSide").value;
         if (!pro || !con) return alert("请输入双计时双方时长");
         page.duration = { pro, con };
-        page.start = start;
       }
 
-      pageList.push(page);
+      if (i === null) {
+        pageList.push(page);
+      } else {
+        pageList[i-1] = page;
+      }
+      updateDisplay();
+      alert("暂存成功")
+    }
+
+    function deleteOnePage(i) {
+      if(!confirm(`确定要删除第 ${i+1} 页 (${pageList[i].section}) 吗？`)) return;
+      pageList = pageList.filter((_, j) => j !== i);
+      console.log(pageList)
       updateDisplay();
     }
-    document.getElementById("settings-addPage").onclick = addPage;
-    document.querySelector("#settings-save").onclick = saveResult;
-    resultBox.value = JSON.stringify(config, null, 2);
 
     function updateDisplay() {
       pageListEl.innerHTML = "";
       pageList.forEach((p, i) => {
         const li = document.createElement("li");
-        li.textContent = `[${i+1}] ${p.section} - ${p.type}` + (p.type!=='none'?`(${(typeof p.duration !== 'object') ? p.duration : p.duration.pro + '/' + p.duration.con})`:"");
+        li.textContent = `[${i+1}] ${p.section} - ${{none: "无", single: "单", double: "双"}[p.type]}计时` + (p.type!=='none'?`(${(typeof p.duration !== 'object') ? formatTime(p.duration) : formatTime(p.duration.pro) + '/' + formatTime(p.duration.con)})`:"");
+        li.oncontextmenu = function(e) {
+          e.preventDefault();
+          deleteOnePage(i);
+        }
+        li.onclick = function() {
+          editPageIndexInput.value = i+1;
+          editPageIndexInput.dispatchEvent(new Event("input"));
+          const typeSelect = document.getElementById("settings-pageType");
+          const sectionInput = document.getElementById("settings-sectionName");
+          const singleDurationInput = document.getElementById("settings-singleDuration");
+          const proDurationInput = document.getElementById("settings-proDuration");
+          const conDurationInput = document.getElementById("settings-conDuration");
+          sectionInput.value = p.section;
+          typeSelect.value = p.type;
+          typeSelect.dispatchEvent(new Event("change"));
+          if (p.type === "single") {
+            singleDurationInput.value = p.duration;
+          } else if (p.type === "double") {
+            proDurationInput.value = p.duration.pro;
+            conDurationInput.value = p.duration.con;
+          }
+        }
         pageListEl.appendChild(li);
       });
 
@@ -313,6 +377,9 @@ window.onload = () => {
       resultBox.value = JSON.stringify(config, null, 2);
     }
 
+    document.getElementById("settings-matchTitle").oninput =  
+    document.getElementById("settings-proSide").oninput =
+    document.getElementById("settings-conSide").oninput = updateDisplay;
     function saveResult() {
       currentPageIndex = 0;
       config = JSON.parse(resultBox.value);

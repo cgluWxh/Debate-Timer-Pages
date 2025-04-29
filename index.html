@@ -21,7 +21,7 @@
       border-radius: 1em;
 
     }
-    #modal input, #modal select, #modal button, #modal textarea { margin: 0.5em 0; padding: 0.5em; width: 100%; }
+    #modal input, #modal select, #modal button, #modal textarea { margin: 0.5em 0; padding: 0.5em; width: 90%; }
     #modal .section { background: black; padding: 1em; margin-top: 1em; border-radius: 8px; box-shadow: 0 0 5px #ccc; }
     #modal .section h3 { margin-top: 0; }
     #modal textarea { height: 200px; font-family: monospace; }
@@ -29,12 +29,7 @@
 </head>
 
 <body>
-  <div id="modal">
-    <div class="section">
-      <h3>杂项配置</h3>
-      <label>背景图片：<input type="file" id="image" onchange="toBase64()"
-            accept="image/jpeg,image/png,image/jpg"></label>
-    </div>
+  <div id="modal"> 
     <div class="section">
       <h3>比赛基本信息</h3>
       <label>比赛题目：<input type="text" id="settings-matchTitle" /></label><br />
@@ -43,8 +38,9 @@
     </div>
 
     <div class="section">
-      <h3>添加比赛页面</h3>
-      <label>页面类型：
+      <h3 id="settings-addOrEditPage">添加比赛环节</h3>
+      <label id="settings-pageIndexLabel" style="display:none;">编辑环节序号：<input type="number" id="settings-pageIndex" style="display:none;" /></label>
+      <label>环节类型：
         <select id="settings-pageType">
           <option value="none">无计时</option>
           <option value="single">单计时</option>
@@ -58,24 +54,24 @@
       <div id="settings-doubleSettings" style="display:none;">
         <label>正方时长（秒）：<input type="number" id="settings-proDuration" /></label><br />
         <label>反方时长（秒）：<input type="number" id="settings-conDuration" /></label><br />
-        <label>起始方：
-          <select id="settings-startSide">
-            <option value="pro">正方</option>
-            <option value="con">反方</option>
-          </select>
-        </label>
       </div>
-      <button id="settings-addPage">添加页面</button>
+      <button id="settings-addPage">暂存环节</button>
     </div>
 
     <div class="section">
-      <h3>当前页面配置</h3>
+      <h3>环节列表 (左键编辑，右键删除)</h3>
       <ul id="settings-pageList"></ul>
     </div>
 
     <div class="section">
       <textarea id="settings-resultBox"></textarea>
       <button id="settings-save">保存设置</button>
+    </div>
+    <div class="section">
+      <h3>杂项配置</h3>
+      <label>背景图片：<input type="file" id="image" onchange="toBase64()"
+            accept="image/jpeg,image/png,image/jpg"></label>
+      <button id="settings-clearBackground">清除背景图片</button>
     </div>
   </div>
   <div class="main-container">
@@ -105,8 +101,8 @@
       <button id="resetBtn">重置 (R)</button>
       <button id="startProBtn">正方开始 (Q)</button>
       <button id="startConBtn">反方开始 (E)</button>
-      <button id="test30sBtn">试音: 30秒</button>
-      <button id="testOverBtn">试音: 时间到</button>
+      <button id="test30sBtn">试音: 30秒 (I)</button>
+      <button id="testOverBtn">试音: 时间到 (P)</button>
       <button id="switchBtn">切换方 (Tab)</button>
       <button id="showGuideBtn">配置</button>
     </div>
