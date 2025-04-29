@@ -1,0 +1,125 @@
+body {
+  margin: 0;
+  padding: 0;
+  font-family: "Arial", sans-serif;
+  background: radial-gradient(#000000, #111);
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  user-select: none;
+}
+
+.main-container {
+  width: 95%;
+  max-width: 1200px;
+  text-align: center;
+}
+
+.title-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.team-label {
+  font-size: 20px;
+  padding: 10px 20px;
+  color: white;
+  font-weight: bold;
+}
+
+.team-label.pro {
+  background-color: #c00;
+}
+
+.team-label.con {
+  background-color: #0060c0;
+}
+
+.debate-title {
+  flex-grow: 1;
+  font-size: 32px;
+  font-weight: bold;
+  text-align: center;
+  margin: 0 10px;
+}
+
+.section-name {
+  font-size: 24px;
+  margin: 20px 0;
+  color: #4fa3f7;
+}
+
+.timers {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 50px;
+  margin: 20px 0;
+  flex-wrap: wrap;
+}
+
+.timer-box {
+  text-align: center;
+}
+
+.time-text {
+  font-size: 72px;
+  font-family: 'Courier New', Courier, monospace;
+  color: white;
+  transition: color 0.3s ease;
+}
+
+.timer-box.double .label {
+  margin-top: 10px;
+  font-size: 20px;
+}
+
+.time-text.pro {
+  color: #ff3333;
+}
+
+.time-text.con {
+  color: #3399ff;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 30px;
+}
+
+.controls button {
+  background-color: #222;
+  color: white;
+  border: 1px solid #666;
+  padding: 10px 20px;
+  font-size: 16px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.controls button:hover {
+  background-color: #333;
+}
+
+@media (max-width: 600px) {
+  .time-text {
+    font-size: 48px;
+  }
+
+  .debate-title {
+    font-size: 24px;
+  }
+
+  .controls button {
+    font-size: 14px;
+    padding: 8px 12px;
+  }
+}

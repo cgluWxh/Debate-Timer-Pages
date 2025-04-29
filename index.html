@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>辩论赛计时器</title>
+  <link rel="stylesheet" href="assets/style.css" />
+  <style>
+    #modal {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: black;
+      padding: 2em;
+      display: none;
+      width: 80%;
+      height: 80%;
+      overflow-y: scroll;
+    }
+    #modal input, #modal select, #modal button, #modal textarea { margin: 0.5em 0; padding: 0.5em; width: 100%; max-width: 600px; }
+    #modal .section { background: black; padding: 1em; margin-top: 1em; border-radius: 8px; box-shadow: 0 0 5px #ccc; }
+    #modal .section h3 { margin-top: 0; }
+    #modal textarea { height: 200px; font-family: monospace; }
+  </style>
+</head>
+
+<body>
+  <div id="modal">
+    <div class="section">
+      <h3>比赛基本信息</h3>
+      <label>比赛题目：<input type="text" id="settings-matchTitle" /></label><br />
+      <label>正方立场：<input type="text" id="settings-proSide" /></label><br />
+      <label>反方立场：<input type="text" id="settings-conSide" /></label>
+    </div>
+
+    <div class="section">
+      <h3>添加比赛页面</h3>
+      <label>页面类型：
+        <select id="settings-pageType">
+          <option value="none">无计时</option>
+          <option value="single">单计时</option>
+          <option value="double">双计时</option>
+        </select>
+      </label><br />
+      <label>环节名称：<input type="text" id="settings-sectionName" /></label><br />
+      <div id="settings-singleSettings">
+        <label>时长（秒）：<input type="number" id="settings-singleDuration" /></label>
+      </div>
+      <div id="settings-doubleSettings" style="display:none;">
+        <label>正方时长（秒）：<input type="number" id="settings-proDuration" /></label><br />
+        <label>反方时长（秒）：<input type="number" id="settings-conDuration" /></label><br />
+        <label>起始方：
+          <select id="settings-startSide">
+            <option value="pro">正方</option>
+            <option value="con">反方</option>
+          </select>
+        </label>
+      </div>
+      <button id="settings-addPage">添加页面</button>
+    </div>
+
+    <div class="section">
+      <h3>当前页面配置</h3>
+      <ul id="settings-pageList"></ul>
+    </div>
+
+    <div class="section">
+      <textarea id="settings-resultBox"></textarea>
+      <button id="settings-save">保存设置</button>
+    </div>
+  </div>
+  <div class="main-container">
+    <div class="title-bar">
+      <div class="team-label pro" id="proSide">正方</div>
+      <div class="debate-title" id="matchTitle">比赛题目</div>
+      <div class="team-label con" id="conSide">反方</div>
+    </div>
+    <div class="section-name" id="sectionName">环节名称</div>
+    <div class="timers">
+      <div class="timer-box" id="singleTimer">
+        <div class="time-text" id="singleTime">00:00</div>
+      </div>
+      <div class="timer-box double" id="proTimer">
+        <div class="time-text pro" id="proTime">00:00</div>
+        <div class="label">正方</div>
+      </div>
+      <div class="timer-box double" id="conTimer">
+        <div class="time-text con" id="conTime">00:00</div>
+        <div class="label">反方</div>
+      </div>
+    </div>
+    <div class="controls">
+      <button id="prevBtn">上一页 (⬅️)</button>
+      <button id="nextBtn">下一页 (➡️)</button>
+      <button id="startPauseBtn">启动/暂停 (Space)</button>
+      <button id="resetBtn">重置 (R)</button>
+      <button id="startProBtn">正方开始 (Q)</button>
+      <button id="startConBtn">反方开始 (E)</button>
+      <button id="switchBtn">切换方 (Tab)</button>
+      <button id="showGuideBtn">配置赛制</button>
+    </div>
+  </div>
+  <script src="assets/main.js"></script>
+</body>
+
+</html>
