@@ -1,14 +1,20 @@
 body {
   margin: 0;
   padding: 0;
-  font-family: "Arial", sans-serif;
-  background: radial-gradient(#000000, #111);
+  font-family: system-ui, 'PingFang SC', 'Arial', sans-serif;
+  background-image: radial-gradient(50% 100% at center bottom, rgb(57, 76, 86), rgb(14, 17, 17));
+  background-size: cover;
   color: white;
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
   user-select: none;
+  font-size: 20px;
+}
+
+#modal {
+  z-index: 999999;
 }
 
 .main-container {
@@ -21,43 +27,68 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  position: fixed;
+  top: 7%;
+  left: 0;
+  right: 0;
+  height: 7%;
 }
 
 .team-label {
   font-size: 20px;
   padding: 10px 20px;
+  flex: 1;
   color: white;
   font-weight: bold;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .team-label.pro {
-  background-color: #c00;
+  background-color: rgb(179, 37, 37);
 }
 
 .team-label.con {
-  background-color: #0060c0;
+  background-color: rgb(3, 105, 161);
+}
+
+#proSide::before {
+    content: '正方';
+    position: absolute;
+    left: .5em;
+    font-size: 1.6em;
+    padding: .02em .08em;
+}
+
+#conSide::before {
+    content: '反方';
+    position: absolute;
+    right: .5em;
+    font-size: 1.6em;
+    border: .05em solid white;
 }
 
 .debate-title {
+  color: rgb(3, 105, 161);
   flex-grow: 1;
-  font-size: 32px;
+  font-size: 3em;
   font-weight: bold;
   text-align: center;
   margin: 0 10px;
 }
 
 .section-name {
-  font-size: 24px;
+  font-size: 2em;
   margin: 20px 0;
-  color: #4fa3f7;
 }
 
 .timers {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 50px;
+  gap: 10em;
   margin: 20px 0;
   flex-wrap: wrap;
 }
@@ -67,23 +98,24 @@ body {
 }
 
 .time-text {
-  font-size: 72px;
-  font-family: 'Courier New', Courier, monospace;
+  font-size: 5em;
+  font-weight: bold;
   color: white;
   transition: color 0.3s ease;
+  font-family: 'Courier New', Courier, monospace, monaco, 'Source Code Pro', ‌'DejaVu Sans Mono';
 }
 
 .timer-box.double .label {
-  margin-top: 10px;
-  font-size: 20px;
+  margin-top: .4em;
+  font-size: 1.6em;
 }
 
-.time-text.pro {
-  color: #ff3333;
+div#proTimer * {
+  color: rgb(179, 37, 37)!important;
 }
 
-.time-text.con {
-  color: #3399ff;
+div#conTimer * {
+  color: rgb(3, 105, 161)!important;
 }
 
 .controls {
@@ -91,7 +123,10 @@ body {
   flex-wrap: wrap;
   justify-content: center;
   gap: 10px;
-  margin-top: 30px;
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 1em;
 }
 
 .controls button {
@@ -107,19 +142,4 @@ body {
 
 .controls button:hover {
   background-color: #333;
-}
-
-@media (max-width: 600px) {
-  .time-text {
-    font-size: 48px;
-  }
-
-  .debate-title {
-    font-size: 24px;
-  }
-
-  .controls button {
-    font-size: 14px;
-    padding: 8px 12px;
-  }
 }

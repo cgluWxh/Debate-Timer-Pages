@@ -16,6 +16,15 @@ const proSide = document.getElementById("proSide");
 const conSide = document.getElementById("conSide");
 const sectionName = document.getElementById("sectionName");
 
+const test30sBtn = document.getElementById("test30sBtn");
+const testOverBtn = document.getElementById("testOverBtn");
+test30sBtn.addEventListener("click", () => {
+  playBeep(1);
+});
+testOverBtn.addEventListener("click", () => {
+  playBeep(2);
+});
+
 const modal = document.getElementById("modal");
 
 const singleTimerBox = document.getElementById("singleTimer");
@@ -31,9 +40,9 @@ const resetBtn = document.getElementById("resetBtn");
 const showGuideBtn = document.getElementById("showGuideBtn");
 const switchBtn = document.getElementById("switchBtn");
 
-const counting = document.createElement("span");
-counting.textContent = " 计时中";
-counting.style.fontSize = ".5em";
+const counting = document.querySelector("#countingHint");
+counting.style.fontSize = "1.5em";
+counting.style.color = "grey";
 
 const beep = new Audio("assets/beep.mp3");
 
@@ -77,10 +86,10 @@ function renderPage() {
   proTimerBox.style.display = "none";
   conTimerBox.style.display = "none";
 
-  disableBtns([startPauseBtn, proBtn, conBtn, resetBtn, switchBtn, showGuideBtn])
+  disableBtns([test30sBtn, testOverBtn, startPauseBtn, proBtn, conBtn, resetBtn, switchBtn, showGuideBtn])
 
   if (currentPageIndex === 0) {
-    enableBtns([showGuideBtn])
+    enableBtns([showGuideBtn, test30sBtn, testOverBtn])
   }
 
   if (page.type === "single") {
@@ -130,9 +139,7 @@ function clearAllIntervals() {
     if (timers[k].interval) clearInterval(timers[k].interval);
     timers[k].interval = null;
   });
-  try {
-    matchTitle && matchTitle.removeChild(counting);
-  } catch (e) { }
+  counting.style.display = "none";
   currentRunning = null;
 }
 
@@ -140,7 +147,7 @@ function startCountdown(type) {
   if (currentRunning && currentRunning !== type) stopCountdown();
   if (timers[type].remaining <= 0) return;
   currentRunning = type;
-  matchTitle.appendChild(counting);
+  counting.style.display = "block";
   timers[type].interval = setInterval(() => {
     timers[type].remaining--;
     updateTimerDisplay(type);
@@ -158,9 +165,7 @@ function stopCountdown() {
     timers[currentRunning].interval = null;
   }
   currentRunning = null;
-  try {
-    matchTitle && matchTitle.removeChild(counting);
-  } catch (e) { }
+  counting.style.display = "none";
 }
 
 function toggleStartPause() {
@@ -343,5 +348,18 @@ window.onload = () => {
     }
     resultBox.dispatchEvent(new Event("input"));
   }
+  const x = localStorage.getItem("bg");
+  if (x) document.querySelector("body").style.backgroundImage = `url(${x})`;
   renderPage();
+}
+function toBase64() {
+  var file = document.querySelector('input[type=file]').files[0];
+  var reader = new FileReader();
+  reader.onloadend = function () {
+    document.querySelector('body').style.backgroundImage = `url(${reader.result})`;
+    localStorage.setItem("bg", reader.result);
+  }
+  if (file) {
+    reader.readAsDataURL(file);
+  }
 }

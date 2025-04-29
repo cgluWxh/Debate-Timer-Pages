@@ -18,8 +18,10 @@
       width: 80%;
       height: 80%;
       overflow-y: scroll;
+      border-radius: 1em;
+
     }
-    #modal input, #modal select, #modal button, #modal textarea { margin: 0.5em 0; padding: 0.5em; width: 100%; max-width: 600px; }
+    #modal input, #modal select, #modal button, #modal textarea { margin: 0.5em 0; padding: 0.5em; width: 100%; }
     #modal .section { background: black; padding: 1em; margin-top: 1em; border-radius: 8px; box-shadow: 0 0 5px #ccc; }
     #modal .section h3 { margin-top: 0; }
     #modal textarea { height: 200px; font-family: monospace; }
@@ -28,6 +30,11 @@
 
 <body>
   <div id="modal">
+    <div class="section">
+      <h3>杂项配置</h3>
+      <label>背景图片：<input type="file" id="image" onchange="toBase64()"
+            accept="image/jpeg,image/png,image/jpg"></label>
+    </div>
     <div class="section">
       <h3>比赛基本信息</h3>
       <label>比赛题目：<input type="text" id="settings-matchTitle" /></label><br />
@@ -74,9 +81,9 @@
   <div class="main-container">
     <div class="title-bar">
       <div class="team-label pro" id="proSide">正方</div>
-      <div class="debate-title" id="matchTitle">比赛题目</div>
       <div class="team-label con" id="conSide">反方</div>
     </div>
+    <div class="debate-title" id="matchTitle">比赛题目</div>
     <div class="section-name" id="sectionName">环节名称</div>
     <div class="timers">
       <div class="timer-box" id="singleTimer">
@@ -92,16 +99,19 @@
       </div>
     </div>
     <div class="controls">
-      <button id="prevBtn">上一页 (⬅️)</button>
-      <button id="nextBtn">下一页 (➡️)</button>
+      <button id="prevBtn">上一页 (←)</button>
+      <button id="nextBtn">下一页 (→)</button>
       <button id="startPauseBtn">启动/暂停 (Space)</button>
       <button id="resetBtn">重置 (R)</button>
       <button id="startProBtn">正方开始 (Q)</button>
       <button id="startConBtn">反方开始 (E)</button>
+      <button id="test30sBtn">试音: 30秒</button>
+      <button id="testOverBtn">试音: 时间到</button>
       <button id="switchBtn">切换方 (Tab)</button>
-      <button id="showGuideBtn">配置赛制</button>
+      <button id="showGuideBtn">配置</button>
     </div>
   </div>
+  <div id="countingHint" style="display:none; position: fixed; right: 0; bottom: 0; z-index: -1;">计时中</div>
   <script src="assets/main.js"></script>
 </body>
 
